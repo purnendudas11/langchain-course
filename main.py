@@ -9,6 +9,7 @@ from langchain_tavily import TavilySearch
 from typing import List
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv()
 
@@ -45,9 +46,15 @@ class AgentResponse(BaseModel):
 #     temperature=0
 # )
 
-llm = ChatOpenAI(
-    model_name="gpt-4o",
-    openai_api_key=os.getenv("OPENAI_API_KEY"),
+# llm = ChatOpenAI(
+#     model_name="gpt-4o",
+#     openai_api_key=os.getenv("OPENAI_API_KEY"),
+#     temperature=0
+# )
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash",
+    google_api_key=os.getenv("GEMINI_API_KEY"),
     temperature=0
 )
 
