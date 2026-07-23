@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict
+from typing import Any, Dict, List, Union
 
 from dotenv import load_dotenv
 from langchain.agents import create_agent
@@ -42,6 +42,26 @@ def retrieve_context(query: str):
     return serialized, retrieved_docs
 
 
+def _extract_text_content(content: Union[str, List[Any], Dict[str, Any], None]) -> str:
+    """Extract plain text from model content (string or content blocks with 'text')."""
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, dict):
+        text = content.get("text")
+        return text if isinstance(text, str) else str(content)
+    if isinstance(content, list):
+        parts: List[str] = []
+        for block in content:
+            if isinstance(block, dict) and isinstance(block.get("text"), str):
+                parts.append(block["text"])
+            elif isinstance(block, str):
+                parts.append(block)
+        return "\n".join(parts) if parts else str(content)
+    return str(content)
+
+
 def run_llm(query: str) -> Dict[str, Any]:
     """
     Run the RAG pipeline to answer a query using retrieved documentation.
@@ -71,8 +91,9 @@ def run_llm(query: str) -> Dict[str, Any]:
     # Invoke the agent
     response = agent.invoke({"messages": messages})
     
-    # Extract the answer from the last AI message
-    answer = response["messages"][-1].content
+    # Extract the answer from the last AI message (text blocks only)
+    raw_content = response["messages"][-1].content
+    answer = _extract_text_content(raw_content)
     
     # Extract context documents from ToolMessage artifacts
     context_docs = []
